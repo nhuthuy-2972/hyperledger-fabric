@@ -10,16 +10,16 @@ const { Gateway, Wallets } = require('fabric-network');
 const FabricCAServices = require('fabric-ca-client');
 const path = require('path');
 const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../test-application/javascript/CAUtil.js');
-const { buildCCPOrg1, buildCCPOrg2, buildWallet } = require('../../test-application/javascript/AppUtil.js');
+const { buildCCPOrg2, buildWallet } = require('../../test-application/javascript/AppUtil.js');
 
 const channelName = 'channel1';
 // const channelName = 'channel';
 
 const chaincodeName = 'basic';
-const mspOrg1 = 'Org2MSP';
-const walletPath = path.join(__dirname, 'wallet');
+const mspOrg = 'Org2MSP';
+const walletPath = path.join(__dirname, 'wallet2');
 // const org1UserId = 'appUser';
-const org1UserId = `${channelName}user`;
+const orgUserId = `${channelName}user1`;
 
 
 function prettyJSONString(inputString) {
@@ -86,11 +86,11 @@ async function main() {
 		const wallet = await buildWallet(Wallets, walletPath);
 
 		// in a real application this would be done on an administrative flow, and only once
-		await enrollAdmin(caClient, wallet, mspOrg1);
+		await enrollAdmin(caClient, wallet, mspOrg);
 
 		// in a real application this would be done only when a new user was required to be added
 		// and would be part of an administrative flow
-		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1UserId, 'org2.department1');
+		await registerAndEnrollUser(caClient, wallet, mspOrg, orgUserId, 'org2.department1');
 
 		// Create a new gateway instance for interacting with the fabric network.
 		// In a real application this would be done as the backend server session is setup for
@@ -104,7 +104,7 @@ async function main() {
 			// signed by this user using the credentials stored in the wallet.
 			await gateway.connect(ccp, {
 				wallet,
-				identity: org1UserId,
+				identity: orgUserId,
 				discovery: { enabled: true, asLocalhost: true } // using asLocalhost as this gateway is using a fabric network deployed locally
 			});
 
@@ -132,7 +132,7 @@ async function main() {
 			// This will be sent to both peers and if both peers endorse the transaction, the endorsed proposal will be sent
 			// to the orderer to be committed by each of the peer's to the channel ledger.
 			console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
-			await contract.submitTransaction('CreateAsset', 'asset69', 'red', '69', 'ahihi', '6969');
+			await contract.submitTransaction('CreateAsset', 'asset100', 'red', '69', 'ahihi', '6969');
 			console.log('*** Result: committed');
 
 			// console.log('\n--> Evaluate Transaction: ReadAsset, function returns an asset with a given assetID');

@@ -17,9 +17,9 @@ const channelName = 'channel1';
 
 const chaincodeName = 'basic';
 const mspOrg1 = 'Org1MSP';
-const walletPath = path.join(__dirname, 'wallet');
+const walletPath = path.join(__dirname, 'wallet1');
 // const org1UserId = 'appUser';
-const org1UserId = `${channelName}user`;
+const org1UserId = `${channelName}user1`;
 
 
 function prettyJSONString(inputString) {
@@ -132,7 +132,7 @@ async function main() {
 			// This will be sent to both peers and if both peers endorse the transaction, the endorsed proposal will be sent
 			// to the orderer to be committed by each of the peer's to the channel ledger.
 			// console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
-			// await contract.submitTransaction('CreateAsset', 'asset69', 'red', '69', 'ahihi', '6969');
+			// await contract.submitTransaction('CreateAsset', 'asset1', 'red', '69', 'ahihi', '6969');
 			// console.log('*** Result: committed');
 
 			// console.log('\n--> Evaluate Transaction: ReadAsset, function returns an asset with a given assetID');

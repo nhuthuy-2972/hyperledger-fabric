@@ -27,8 +27,7 @@ exports.buildCCPOrg1 = () => {
 
 exports.buildCCPOrg2 = () => {
 	// load the common connection configuration file
-	const ccpPath = path.resolve(__dirname, '..', '..', 'test-network',
-		'organizations', 'peerOrganizations', 'org2.example.com', 'connection-org2.json');
+	const ccpPath = path.resolve(__dirname, '..', '..', 'test-network', 'organizations', 'peerOrganizations', 'org2.example.com', 'connection-org2.json');
 	const fileExists = fs.existsSync(ccpPath);
 	if (!fileExists) {
 		throw new Error(`no such file or directory: ${ccpPath}`);
@@ -58,9 +57,9 @@ exports.buildWallet = async (Wallets, walletPath) => {
 
 exports.prettyJSONString = (inputString) => {
 	if (inputString) {
-		 return JSON.stringify(JSON.parse(inputString), null, 2);
+		return JSON.stringify(JSON.parse(inputString), null, 2);
 	}
 	else {
-		 return inputString;
+		return inputString;
 	}
 }
