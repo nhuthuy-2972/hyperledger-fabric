@@ -10,67 +10,66 @@ const { Contract } = require('fabric-contract-api');
 
 class AssetTransfer extends Contract {
 
-    async InitLedger(ctx) {
-        const assets = [
-            {
-                ID: 'asset1',
-                Color: 'blue',
-                Size: 5,
-                Owner: 'Tomoko',
-                AppraisedValue: 300,
-            },
-            {
-                ID: 'asset2',
-                Color: 'red',
-                Size: 5,
-                Owner: 'Brad',
-                AppraisedValue: 400,
-            },
-            {
-                ID: 'asset3',
-                Color: 'green',
-                Size: 10,
-                Owner: 'Jin Soo',
-                AppraisedValue: 500,
-            },
-            {
-                ID: 'asset4',
-                Color: 'yellow',
-                Size: 10,
-                Owner: 'Max',
-                AppraisedValue: 600,
-            },
-            {
-                ID: 'asset5',
-                Color: 'black',
-                Size: 15,
-                Owner: 'Adriana',
-                AppraisedValue: 700,
-            },
-            {
-                ID: 'asset6',
-                Color: 'white',
-                Size: 15,
-                Owner: 'Michel',
-                AppraisedValue: 800,
-            },
-        ];
+    // async InitLedger(ctx) {
+    //     const assets = [
+    //         {
+    //             ID: 'asset1',
+    //             Color: 'blue',
+    //             Size: 5,
+    //             Owner: 'Tomoko',
+    //             AppraisedValue: 300,
+    //         },
+    //         {
+    //             ID: 'asset2',
+    //             Color: 'red',
+    //             Size: 5,
+    //             Owner: 'Brad',
+    //             AppraisedValue: 400,
+    //         },
+    //         {
+    //             ID: 'asset3',
+    //             Color: 'green',
+    //             Size: 10,
+    //             Owner: 'Jin Soo',
+    //             AppraisedValue: 500,
+    //         },
+    //         {
+    //             ID: 'asset4',
+    //             Color: 'yellow',
+    //             Size: 10,
+    //             Owner: 'Max',
+    //             AppraisedValue: 600,
+    //         },
+    //         {
+    //             ID: 'asset5',
+    //             Color: 'black',
+    //             Size: 15,
+    //             Owner: 'Adriana',
+    //             AppraisedValue: 700,
+    //         },
+    //         {
+    //             ID: 'asset6',
+    //             Color: 'white',
+    //             Size: 15,
+    //             Owner: 'Michel',
+    //             AppraisedValue: 800,
+    //         },
+    //     ];
 
-        for (const asset of assets) {
-            asset.docType = 'asset';
-            await ctx.stub.putState(asset.ID, Buffer.from(JSON.stringify(asset)));
-            console.info(`Asset ${asset.ID} initialized`);
-        }
-    }
+    //     for (const asset of assets) {
+    //         asset.docType = 'asset';
+    //         await ctx.stub.putState(asset.ID, Buffer.from(JSON.stringify(asset)));
+    //         console.info(`Asset ${asset.ID} initialized`);
+    //     }
+    // }
 
     // CreateAsset issues a new asset to the world state with given details.
-    async CreateAsset(ctx, id, color, size, owner, appraisedValue) {
+    async CreateAsset(ctx, id, datastr) {
+
+        let data = JSON.parse(datastr);
         const asset = {
             ID: id,
-            Color: color,
-            Size: size,
-            Owner: owner,
-            AppraisedValue: appraisedValue,
+            ...data
         };
         return ctx.stub.putState(id, Buffer.from(JSON.stringify(asset)));
     }
@@ -85,31 +84,29 @@ class AssetTransfer extends Contract {
     }
 
     // UpdateAsset updates an existing asset in the world state with provided parameters.
-    async UpdateAsset(ctx, id, color, size, owner, appraisedValue) {
+    async UpdateAsset(ctx, id, datastr) {
         const exists = await this.AssetExists(ctx, id);
         if (!exists) {
             throw new Error(`The asset ${id} does not exist`);
         }
 
+        let data = JSON.parse(datastr);
         // overwriting original asset with new asset
         const updatedAsset = {
             ID: id,
-            Color: color,
-            Size: size,
-            Owner: owner,
-            AppraisedValue: appraisedValue,
+            ...data
         };
         return ctx.stub.putState(id, Buffer.from(JSON.stringify(updatedAsset)));
     }
 
-    // DeleteAsset deletes an given asset from the world state.
-    async DeleteAsset(ctx, id) {
-        const exists = await this.AssetExists(ctx, id);
-        if (!exists) {
-            throw new Error(`The asset ${id} does not exist`);
-        }
-        return ctx.stub.deleteState(id);
-    }
+    // // DeleteAsset deletes an given asset from the world state.
+    // async DeleteAsset(ctx, id) {
+    //     const exists = await this.AssetExists(ctx, id);
+    //     if (!exists) {
+    //         throw new Error(`The asset ${id} does not exist`);
+    //     }
+    //     return ctx.stub.deleteState(id);
+    // }
 
     // AssetExists returns true when asset with given ID exists in world state.
     async AssetExists(ctx, id) {
@@ -118,12 +115,12 @@ class AssetTransfer extends Contract {
     }
 
     // TransferAsset updates the owner field of asset with given id in the world state.
-    async TransferAsset(ctx, id, newOwner) {
-        const assetString = await this.ReadAsset(ctx, id);
-        const asset = JSON.parse(assetString);
-        asset.Owner = newOwner;
-        return ctx.stub.putState(id, Buffer.from(JSON.stringify(asset)));
-    }
+    // async TransferAsset(ctx, id, newOwner) {
+    //     const assetString = await this.ReadAsset(ctx, id);
+    //     const asset = JSON.parse(assetString);
+    //     asset.Owner = newOwner;
+    //     return ctx.stub.putState(id, Buffer.from(JSON.stringify(asset)));
+    // }
 
     // GetAllAssets returns all assets found in the world state.
     async GetAllAssets(ctx) {
@@ -146,7 +143,24 @@ class AssetTransfer extends Contract {
         return JSON.stringify(allResults);
     }
 
+    async Gethistory(ctx, key) {
+        const promiseOfIterator = ctx.stub.getHistoryForKey(key);
 
+        const results = [];
+        for await (const keyMod of promiseOfIterator) {
+            const resp = {
+                timestamp: keyMod.timestamp,
+                txid: keyMod.tx_id
+            }
+            if (keyMod.is_delete) {
+                resp.data = 'KEY DELETED';
+            } else {
+                resp.data = keyMod.value.toString('utf8');
+            }
+            results.push(resp);
+        }
+        return JSON.stringify(results);
+    }
 }
 
 module.exports = AssetTransfer;

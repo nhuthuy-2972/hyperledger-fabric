@@ -122,18 +122,21 @@ async function main() {
 			// await contract.submitTransaction('InitLedger');
 			// console.log('*** Result: committed');
 
+			let data = {
+				PH: 9,
+				TEMP: 37
+			}
+			// console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
+			// await contract.submitTransaction('CreateAsset', 'sensor1', JSON.stringify(data));
+			// console.log('*** Result: committed');
 			// Let's try a query type operation (function).
 			// This will be sent to just one peer and the results will be shown.
-			console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
-			let result = await contract.evaluateTransaction('GetAllAssets');
-			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
+
 
 			// Now let's try to submit a transaction.
 			// This will be sent to both peers and if both peers endorse the transaction, the endorsed proposal will be sent
 			// to the orderer to be committed by each of the peer's to the channel ledger.
-			// console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
-			// await contract.submitTransaction('CreateAsset', 'asset1', 'red', '69', 'ahihi', '6969');
-			// console.log('*** Result: committed');
+
 
 			// console.log('\n--> Evaluate Transaction: ReadAsset, function returns an asset with a given assetID');
 			// let result = await contract.evaluateTransaction('ReadAsset', 'asset14');
@@ -148,8 +151,13 @@ async function main() {
 			// console.log(`*** Result: ${prettyJSONString(result.toString())}`);
 
 			// console.log('\n--> Submit Transaction: UpdateAsset asset1, change the appraisedValue to 350');
-			// await contract.submitTransaction('UpdateAsset', 'asset1', 'blue', '5', 'Tomoko', '350');
+			// await contract.submitTransaction('UpdateAsset', 'sensor1', JSON.stringify(data));
 			// console.log('*** Result: committed');
+
+			console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
+			let result = await contract.evaluateTransaction('Gethistory', "sensor1");
+			console.log(JSON.parse(result))
+			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
 
 			// console.log('\n--> Evaluate Transaction: ReadAsset, function returns "asset1" attributes');
 			// result = await contract.evaluateTransaction('ReadAsset', 'asset1');
