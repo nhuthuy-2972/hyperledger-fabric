@@ -7,71 +7,30 @@
 'use strict';
 
 const { Contract } = require('fabric-contract-api');
-
+const { error } = require('fabric-shim');
+const ClientIdentity = require('fabric-shim').ClientIdentity;
 class AssetTransfer extends Contract {
 
-    // async InitLedger(ctx) {
-    //     const assets = [
-    //         {
-    //             ID: 'asset1',
-    //             Color: 'blue',
-    //             Size: 5,
-    //             Owner: 'Tomoko',
-    //             AppraisedValue: 300,
-    //         },
-    //         {
-    //             ID: 'asset2',
-    //             Color: 'red',
-    //             Size: 5,
-    //             Owner: 'Brad',
-    //             AppraisedValue: 400,
-    //         },
-    //         {
-    //             ID: 'asset3',
-    //             Color: 'green',
-    //             Size: 10,
-    //             Owner: 'Jin Soo',
-    //             AppraisedValue: 500,
-    //         },
-    //         {
-    //             ID: 'asset4',
-    //             Color: 'yellow',
-    //             Size: 10,
-    //             Owner: 'Max',
-    //             AppraisedValue: 600,
-    //         },
-    //         {
-    //             ID: 'asset5',
-    //             Color: 'black',
-    //             Size: 15,
-    //             Owner: 'Adriana',
-    //             AppraisedValue: 700,
-    //         },
-    //         {
-    //             ID: 'asset6',
-    //             Color: 'white',
-    //             Size: 15,
-    //             Owner: 'Michel',
-    //             AppraisedValue: 800,
-    //         },
-    //     ];
 
-    //     for (const asset of assets) {
-    //         asset.docType = 'asset';
-    //         await ctx.stub.putState(asset.ID, Buffer.from(JSON.stringify(asset)));
-    //         console.info(`Asset ${asset.ID} initialized`);
-    //     }
-    // }
+    async initDevice(ctx, id, datastr) {
 
-    // CreateAsset issues a new asset to the world state with given details.
-    async CreateAsset(ctx, id, datastr) {
+        let channelid = ctx.stub.getChannelID();
+        const cid = new ClientIdentity(ctx.stub);
+        let channelname = cid.getAttributeValue("channelName");
 
-        let data = JSON.parse(datastr);
-        const asset = {
-            ID: id,
-            ...data
-        };
-        return ctx.stub.putState(id, Buffer.from(JSON.stringify(asset)));
+        if (cid.assertAttributeValue("channelName", channelid) && cid.assertAttributeValue("role", "writer")) {
+            let data = JSON.parse(datastr);
+            const asset = {
+                // channelid,
+                // channelname,
+                ID: id,
+                ...data,
+                // ok: true
+            };
+            return ctx.stub.putState(id, Buffer.from(JSON.stringify(asset)));
+
+        } else
+            return { Error: "Access denine" };
     }
 
     // ReadAsset returns the asset stored in the world state with given id.
@@ -84,83 +43,84 @@ class AssetTransfer extends Contract {
     }
 
     // UpdateAsset updates an existing asset in the world state with provided parameters.
-    async UpdateAsset(ctx, id, datastr) {
-        const exists = await this.AssetExists(ctx, id);
-        if (!exists) {
-            throw new Error(`The asset ${id} does not exist`);
-        }
+    async updateDevice(ctx, id, datastr) {
 
-        let data = JSON.parse(datastr);
-        // overwriting original asset with new asset
-        const updatedAsset = {
-            ID: id,
-            ...data
-        };
-        return ctx.stub.putState(id, Buffer.from(JSON.stringify(updatedAsset)));
+        let channelid = ctx.stub.getChannelID();
+        const cid = new ClientIdentity(ctx.stub);
+        let channelname = cid.getAttributeValue("channelName");
+
+        if (cid.assertAttributeValue("channelName", channelid) && cid.assertAttributeValue("role", "writer")) {
+            const exists = await this.deviceExists(ctx, id);
+            if (!exists) {
+                throw new Error(`The asset ${id} does not exist`);
+            }
+
+            let data = JSON.parse(datastr);
+            // overwriting original asset with new asset
+            const updatedAsset = {
+                ID: id,
+                ...data
+            };
+            return ctx.stub.putState(id, Buffer.from(JSON.stringify(updatedAsset)));
+        } else
+            return { Error: "Access denine" };
     }
 
-    // // DeleteAsset deletes an given asset from the world state.
-    // async DeleteAsset(ctx, id) {
-    //     const exists = await this.AssetExists(ctx, id);
-    //     if (!exists) {
-    //         throw new Error(`The asset ${id} does not exist`);
-    //     }
-    //     return ctx.stub.deleteState(id);
-    // }
 
-    // AssetExists returns true when asset with given ID exists in world state.
-    async AssetExists(ctx, id) {
+    async deviceExists(ctx, id) {
         const assetJSON = await ctx.stub.getState(id);
         return assetJSON && assetJSON.length > 0;
     }
 
-    // TransferAsset updates the owner field of asset with given id in the world state.
-    // async TransferAsset(ctx, id, newOwner) {
-    //     const assetString = await this.ReadAsset(ctx, id);
-    //     const asset = JSON.parse(assetString);
-    //     asset.Owner = newOwner;
-    //     return ctx.stub.putState(id, Buffer.from(JSON.stringify(asset)));
-    // }
+    async Gethistory(ctx, key) {
+
+
+        let channelid = ctx.stub.getChannelID();
+        const cid = new ClientIdentity(ctx.stub);
+        let channelname = cid.getAttributeValue("channelName");
+
+        if (cid.assertAttributeValue("channelName", channelid) && cid.assertAttributeValue("role", "reader")) {
+            const promiseOfIterator = ctx.stub.getHistoryForKey(key);
+
+            const results = [];
+            for await (const keyMod of promiseOfIterator) {
+                const resp = {
+                    timestamp: keyMod.timestamp,
+                    txid: keyMod.tx_id
+                }
+                if (keyMod.is_delete) {
+                    resp.data = 'KEY DELETED';
+                } else {
+                    resp.data = keyMod.value.toString('utf8');
+                }
+                results.push(resp);
+            }
+            return JSON.stringify(results);
+        } else
+            return { Error: "Access denine" };
+    }
 
     // GetAllAssets returns all assets found in the world state.
-    async GetAllAssets(ctx) {
-        const allResults = [];
-        // range query with empty string for startKey and endKey does an open-ended query of all assets in the chaincode namespace.
-        const iterator = await ctx.stub.getStateByRange('', '');
-        let result = await iterator.next();
-        while (!result.done) {
-            const strValue = Buffer.from(result.value.value.toString()).toString('utf8');
-            let record;
-            try {
-                record = JSON.parse(strValue);
-            } catch (err) {
-                console.log(err);
-                record = strValue;
-            }
-            allResults.push({ Key: result.value.key, Record: record });
-            result = await iterator.next();
-        }
-        return JSON.stringify(allResults);
-    }
+    // async GetAllAssets(ctx) {
+    //     const allResults = [];
+    //     // range query with empty string for startKey and endKey does an open-ended query of all assets in the chaincode namespace.
+    //     const iterator = await ctx.stub.getStateByRange('', '');
+    //     let result = await iterator.next();
+    //     while (!result.done) {
+    //         const strValue = Buffer.from(result.value.value.toString()).toString('utf8');
+    //         let record;
+    //         try {
+    //             record = JSON.parse(strValue);
+    //         } catch (err) {
+    //             console.log(err);
+    //             record = strValue;
+    //         }
+    //         allResults.push({ Key: result.value.key, Record: record });
+    //         result = await iterator.next();
+    //     }
+    //     return JSON.stringify(allResults);
+    // }
 
-    async Gethistory(ctx, key) {
-        const promiseOfIterator = ctx.stub.getHistoryForKey(key);
-
-        const results = [];
-        for await (const keyMod of promiseOfIterator) {
-            const resp = {
-                timestamp: keyMod.timestamp,
-                txid: keyMod.tx_id
-            }
-            if (keyMod.is_delete) {
-                resp.data = 'KEY DELETED';
-            } else {
-                resp.data = keyMod.value.toString('utf8');
-            }
-            results.push(resp);
-        }
-        return JSON.stringify(results);
-    }
 }
 
 module.exports = AssetTransfer;

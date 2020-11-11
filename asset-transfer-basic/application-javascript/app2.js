@@ -114,6 +114,20 @@ async function main() {
 			// Get the contract from the network.
 			const contract = network.getContract(chaincodeName);
 
+			let data = {
+				PH: 6.5,
+				TEMP: 29,
+				HUMIDITY: 69
+			}
+			console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
+			await contract.submitTransaction('CreateAsset', 'sensor1', JSON.stringify(data));
+			console.log('*** Result: committed');
+
+			console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
+			let result = await contract.evaluateTransaction('Gethistory', "sensor1");
+			console.log(JSON.parse(result))
+			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
+
 			// Initialize a set of asset data on the channel using the chaincode 'InitLedger' function.
 			// This type of transaction would only be run once by an application the first time it was started after it
 			// deployed the first time. Any updates to the chaincode deployed later would likely not need to run
@@ -131,9 +145,9 @@ async function main() {
 			// Now let's try to submit a transaction.
 			// This will be sent to both peers and if both peers endorse the transaction, the endorsed proposal will be sent
 			// to the orderer to be committed by each of the peer's to the channel ledger.
-			console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
-			await contract.submitTransaction('CreateAsset', 'asset100', 'red', '69', 'ahihi', '6969');
-			console.log('*** Result: committed');
+			// console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
+			// await contract.submitTransaction('CreateAsset', 'asset100', 'red', '69', 'ahihi', '6969');
+			// console.log('*** Result: committed');
 
 			// console.log('\n--> Evaluate Transaction: ReadAsset, function returns an asset with a given assetID');
 			// let result = await contract.evaluateTransaction('ReadAsset', 'asset14');
