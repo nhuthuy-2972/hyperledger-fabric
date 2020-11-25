@@ -12,7 +12,7 @@ const ClientIdentity = require('fabric-shim').ClientIdentity;
 class AssetTransfer extends Contract {
 
 
-    async initDevice(ctx, id, datastr) {
+    async pushStateDevice(ctx, id, datastr) {
 
         let channelid = ctx.stub.getChannelID();
         const cid = new ClientIdentity(ctx.stub);
@@ -30,7 +30,7 @@ class AssetTransfer extends Contract {
             return ctx.stub.putState(id, Buffer.from(JSON.stringify(asset)));
 
         } else
-            return { Error: "Access denine" };
+            throw new Error("Access denine");
     }
 
     // ReadAsset returns the asset stored in the world state with given id.
@@ -43,28 +43,28 @@ class AssetTransfer extends Contract {
     }
 
     // UpdateAsset updates an existing asset in the world state with provided parameters.
-    async updateDevice(ctx, id, datastr) {
+    // async updateDevice(ctx, id, datastr) {
 
-        let channelid = ctx.stub.getChannelID();
-        const cid = new ClientIdentity(ctx.stub);
-        let channelname = cid.getAttributeValue("channelName");
+    //     let channelid = ctx.stub.getChannelID();
+    //     const cid = new ClientIdentity(ctx.stub);
+    //     let channelname = cid.getAttributeValue("channelName");
 
-        if (cid.assertAttributeValue("channelName", channelid) && cid.assertAttributeValue("role", "writer")) {
-            const exists = await this.deviceExists(ctx, id);
-            if (!exists) {
-                throw new Error(`The asset ${id} does not exist`);
-            }
+    //     if (cid.assertAttributeValue("channelName", channelid) && cid.assertAttributeValue("role", "writer")) {
+    //         const exists = await this.deviceExists(ctx, id);
+    //         if (!exists) {
+    //             throw new Error(`The asset ${id} does not exist`);
+    //         }
 
-            let data = JSON.parse(datastr);
-            // overwriting original asset with new asset
-            const updatedAsset = {
-                ID: id,
-                ...data
-            };
-            return ctx.stub.putState(id, Buffer.from(JSON.stringify(updatedAsset)));
-        } else
-            return { Error: "Access denine" };
-    }
+    //         let data = JSON.parse(datastr);
+    //         // overwriting original asset with new asset
+    //         const updatedAsset = {
+    //             ID: id,
+    //             ...data
+    //         };
+    //         return ctx.stub.putState(id, Buffer.from(JSON.stringify(updatedAsset)));
+    //     } else
+    //         throw new Error("Access denine");
+    // }
 
 
     async deviceExists(ctx, id) {
@@ -72,7 +72,7 @@ class AssetTransfer extends Contract {
         return assetJSON && assetJSON.length > 0;
     }
 
-    async Gethistory(ctx, key) {
+    async getHistoryDevice(ctx, key) {
 
 
         let channelid = ctx.stub.getChannelID();
@@ -80,6 +80,12 @@ class AssetTransfer extends Contract {
         let channelname = cid.getAttributeValue("channelName");
 
         if (cid.assertAttributeValue("channelName", channelid) && cid.assertAttributeValue("role", "reader")) {
+
+            const exists = await this.deviceExists(ctx, key);
+            if (!exists) {
+                throw new Error(`The asset ${id} does not exist`);
+            }
+
             const promiseOfIterator = ctx.stub.getHistoryForKey(key);
 
             const results = [];
@@ -97,7 +103,7 @@ class AssetTransfer extends Contract {
             }
             return JSON.stringify(results);
         } else
-            return { Error: "Access denine" };
+            throw new Error("Access denine");
     }
 
     // GetAllAssets returns all assets found in the world state.

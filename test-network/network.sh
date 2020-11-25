@@ -601,6 +601,8 @@ elif [ "$MODE" == "approveCC" ]; then
   infoln "approve chaincode on channel '${CHANNEL_NAME}'"
 elif [ "$MODE" == "createchannelapproveCC" ]; then
   infoln "createchannel approveCC chaincode on channel '${CHANNEL_NAME}'"
+elif [ "$MODE" == "createChannelDeployCC" ]; then
+  infoln "createchannel and deploy chaincode on channel '${CHANNEL_NAME}'"
 else
   printHelp
   exit 1
@@ -616,6 +618,9 @@ elif [ "${MODE}" == "approveCC" ]; then
   approveCC
 elif [ "${MODE}" == "createchannelapproveCC" ]; then
   createchannelapproveCC
+elif [ "${MODE}" == "createChannelDeployCC" ]; then
+  createChannel
+  deployCC
 elif [ "${MODE}" == "down" ]; then
   networkDown
 elif [ "${MODE}" == "restart" ]; then

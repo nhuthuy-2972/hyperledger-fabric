@@ -12,15 +12,16 @@ const path = require('path');
 const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../test-application/javascript/CAUtil.js');
 const { buildCCPOrg2, buildWallet } = require('../../test-application/javascript/AppUtil.js');
 
-const channelName = 'channel1';
+const channelName = 'channelid1';
 // const channelName = 'channel';
-
+// const role = "reader";
+const role = "writer";
 const chaincodeName = 'basic';
 const mspOrg = 'Org2MSP';
 const walletPath = path.join(__dirname, 'wallet2');
 // const org1UserId = 'appUser';
-const orgUserId = `${channelName}user1`;
-
+// const org1UserId = `user10`;
+const orgUserId = `${channelName}user${role}${mspOrg}fix`;
 
 function prettyJSONString(inputString) {
 	return JSON.stringify(JSON.parse(inputString), null, 2);
@@ -90,7 +91,7 @@ async function main() {
 
 		// in a real application this would be done only when a new user was required to be added
 		// and would be part of an administrative flow
-		await registerAndEnrollUser(caClient, wallet, mspOrg, orgUserId, 'org2.department1');
+		await registerAndEnrollUser(caClient, wallet, mspOrg, orgUserId, 'org1.department1', channelName, role);
 
 		// Create a new gateway instance for interacting with the fabric network.
 		// In a real application this would be done as the backend server session is setup for
@@ -114,19 +115,29 @@ async function main() {
 			// Get the contract from the network.
 			const contract = network.getContract(chaincodeName);
 
-			let data = {
-				PH: 6.5,
-				TEMP: 29,
-				HUMIDITY: 69
-			}
-			console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
-			await contract.submitTransaction('CreateAsset', 'sensor1', JSON.stringify(data));
-			console.log('*** Result: committed');
+			let sensorid = "-86bBz8_CMvSt2I5lt8Eh"
 
-			console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
-			let result = await contract.evaluateTransaction('Gethistory', "sensor1");
-			console.log(JSON.parse(result))
-			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
+			let data = {
+				ph: 6,
+				temperature: 22,
+				timestamp: Math.ceil(new Date().getTime() / 1000)
+			}
+
+			console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
+			let rst = await contract.submitTransaction('pushStateDevice', sensorid, JSON.stringify(data));
+
+			console.log(`*** Result: ${prettyJSONString(rst.toString())}`);
+			if (rst == false) console.log("err"); else console.log("commited");
+
+
+			// console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
+			// await contract.submitTransaction('CreateAsset', 'sensor1', JSON.stringify(data));
+			// console.log('*** Result: committed');
+
+			// console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
+			// let result = await contract.evaluateTransaction('Gethistory', "sensor1");
+			// console.log(JSON.parse(result))
+			// console.log(`*** Result: ${prettyJSONString(result.toString())}`);
 
 			// Initialize a set of asset data on the channel using the chaincode 'InitLedger' function.
 			// This type of transaction would only be run once by an application the first time it was started after it

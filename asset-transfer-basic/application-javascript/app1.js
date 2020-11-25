@@ -12,17 +12,17 @@ const path = require('path');
 const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../test-application/javascript/CAUtil.js');
 const { buildCCPOrg1, buildCCPOrg2, buildWallet } = require('../../test-application/javascript/AppUtil.js');
 
-const channelName = 'channel2';
+const channelName = 'channelid1';
 // const channelName = 'channel';
-// const role = "reader";
-const role = "writer";
+const role = "reader";
+// const role = "writer";
 const chaincodeName = 'basic';
-const mspOrg1 = 'Org1MSP';
+const mspOrg = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet1');
 // const org1UserId = 'appUser';
-const org1UserId = `user10`;
-// const org1UserId = `channel2user2`;
-
+// const org1UserId = `user10`;
+// const orgUserId = `${channelName}user${role}${mspOrg}`;
+const orgUserId = 'f22a0b037a8ca95904c6674514c0c85dff6f631d';
 function prettyJSONString(inputString) {
 	return JSON.stringify(JSON.parse(inputString), null, 2);
 }
@@ -87,11 +87,11 @@ async function main() {
 		const wallet = await buildWallet(Wallets, walletPath);
 
 		// in a real application this would be done on an administrative flow, and only once
-		await enrollAdmin(caClient, wallet, mspOrg1);
+		await enrollAdmin(caClient, wallet, mspOrg);
 
 		// in a real application this would be done only when a new user was required to be added
 		// and would be part of an administrative flow
-		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1UserId, 'org1.department1', channelName, role);
+		await registerAndEnrollUser(caClient, wallet, mspOrg, orgUserId, 'org1.department1', channelName, role);
 
 		// Create a new gateway instance for interacting with the fabric network.
 		// In a real application this would be done as the backend server session is setup for
@@ -105,7 +105,7 @@ async function main() {
 			// signed by this user using the credentials stored in the wallet.
 			await gateway.connect(ccp, {
 				wallet,
-				identity: org1UserId,
+				identity: orgUserId,
 				discovery: { enabled: true, asLocalhost: true } // using asLocalhost as this gateway is using a fabric network deployed locally
 			});
 
@@ -117,34 +117,34 @@ async function main() {
 			// const retrieveIdentity = await identityService.getOne(org1UserId, adminIdentity)
 			// console.log("user attributes: ", retrieveIdentity.result.attrs)
 			// // Build a network instance based on the channel where the smart contract is deployed
-			const network = await gateway.getNetwork('channel2');
+			const network = await gateway.getNetwork(channelName);
 
 			// Get the contract from the network.
 			const contract = network.getContract(chaincodeName);
-			let sensorid = "sensor1"
+			let sensorid = "-86bBz8_CMvSt2I5lt8Eh"
 
 			let data = {
-				PH: 9,
-				TEMP: 35
+				ph: 1,
+				temperature: 11,
 			}
 
 			// console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
-			// let rst = await contract.submitTransaction('initDevice', sensorid, JSON.stringify(data));
+			// let rst = await contract.submitTransaction('pushStateDevice', sensorid, JSON.stringify(data));
 
 			// console.log(`*** Result: ${prettyJSONString(rst.toString())}`);
 			// if (rst == false) console.log("err"); else console.log("commited");
 
-			console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
-			let rst = await contract.submitTransaction('updateDevice', sensorid, JSON.stringify(data));
+			// console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
+			// let rst = await contract.submitTransaction('updateDevice', sensorid, JSON.stringify(data));
+			// // console.log()
+			// console.log(`*** Result: ${prettyJSONString(rst.toString())}`);
+			// if (rst == false) console.log("err"); else console.log("commited");
 
-			console.log(`*** Result: ${prettyJSONString(rst.toString())}`);
-			if (rst == false) console.log("err"); else console.log("commited");
 
-
-			// console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
-			// let result = await contract.evaluateTransaction('Gethistory', sensorid);
-			// console.log(JSON.parse(result))
-			// console.log(`*** Result: ${prettyJSONString(result.toString())}`);
+			console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
+			let result = await contract.evaluateTransaction('getHistoryDevice', sensorid);
+			console.log(JSON.parse(result))
+			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
 
 
 		} finally {
