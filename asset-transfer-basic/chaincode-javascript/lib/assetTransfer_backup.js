@@ -14,11 +14,11 @@ class AssetTransfer extends Contract {
 
     async pushStateDevice(ctx, id, datastr) {
 
-        // let channelid = ctx.stub.getChannelID();
+        let channelid = ctx.stub.getChannelID();
         const cid = new ClientIdentity(ctx.stub);
-        // let deviceID = cid.getAttributeValue("deviceID");
-        let mpsid = cid.getMSPID();
-        if (cid.assertAttributeValue("deviceID", id) && mpsid === 'Org1MSP') {
+        let channelname = cid.getAttributeValue("channelName");
+
+        if (cid.assertAttributeValue("channelName", channelid) && cid.assertAttributeValue("role", "writer")) {
             let data = JSON.parse(datastr);
             const asset = {
                 // channelid,
@@ -75,15 +75,15 @@ class AssetTransfer extends Contract {
     async getHistoryDevice(ctx, key) {
 
 
-        // let channelid = ctx.stub.getChannelID();
+        let channelid = ctx.stub.getChannelID();
         const cid = new ClientIdentity(ctx.stub);
-        // let channelname = cid.getAttributeValue("channelName");
-        let mpsid = cid.getMSPID();
-        if (cid.assertAttributeValue("deviceID", key) && mpsid === 'Org2MSP') {
+        let channelname = cid.getAttributeValue("channelName");
+
+        if (cid.assertAttributeValue("channelName", channelid) && cid.assertAttributeValue("role", "reader")) {
 
             const exists = await this.deviceExists(ctx, key);
             if (!exists) {
-                throw new Error(`The asset ${key} does not exist`);
+                throw new Error(`The asset ${id} does not exist`);
             }
 
             const promiseOfIterator = ctx.stub.getHistoryForKey(key);

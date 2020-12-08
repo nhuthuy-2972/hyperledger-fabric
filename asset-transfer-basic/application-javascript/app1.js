@@ -12,7 +12,7 @@ const path = require('path');
 const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../test-application/javascript/CAUtil.js');
 const { buildCCPOrg1, buildCCPOrg2, buildWallet } = require('../../test-application/javascript/AppUtil.js');
 
-const channelName = 'channelid1';
+const channelName = 'channel1';
 // const channelName = 'channel';
 const role = "reader";
 // const role = "writer";
@@ -22,7 +22,8 @@ const walletPath = path.join(__dirname, 'wallet1');
 // const org1UserId = 'appUser';
 // const org1UserId = `user10`;
 // const orgUserId = `${channelName}user${role}${mspOrg}`;
-const orgUserId = 'f22a0b037a8ca95904c6674514c0c85dff6f631d';
+const orgUserId = 'user2';
+const deviceID = "deviceid2"
 function prettyJSONString(inputString) {
 	return JSON.stringify(JSON.parse(inputString), null, 2);
 }
@@ -91,7 +92,7 @@ async function main() {
 
 		// in a real application this would be done only when a new user was required to be added
 		// and would be part of an administrative flow
-		await registerAndEnrollUser(caClient, wallet, mspOrg, orgUserId, 'org1.department1', channelName, role);
+		await registerAndEnrollUser(caClient, wallet, mspOrg, orgUserId, 'org1.department1', deviceID);
 
 		// Create a new gateway instance for interacting with the fabric network.
 		// In a real application this would be done as the backend server session is setup for
@@ -121,18 +122,19 @@ async function main() {
 
 			// Get the contract from the network.
 			const contract = network.getContract(chaincodeName);
-			let sensorid = "-86bBz8_CMvSt2I5lt8Eh"
+
 
 			let data = {
-				ph: 1,
-				temperature: 11,
+				ph: 14,
+				temperature: 29,
+				timestamp: Math.ceil(new Date().getTime() / 1000)
 			}
 
-			// console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
-			// let rst = await contract.submitTransaction('pushStateDevice', sensorid, JSON.stringify(data));
+			console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
+			let rst = await contract.submitTransaction('pushStateDevice', deviceID, JSON.stringify(data));
 
-			// console.log(`*** Result: ${prettyJSONString(rst.toString())}`);
-			// if (rst == false) console.log("err"); else console.log("commited");
+			console.log(`*** Result: ${prettyJSONString(rst.toString())}`);
+			if (rst == false) console.log("err"); else console.log("commited");
 
 			// console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
 			// let rst = await contract.submitTransaction('updateDevice', sensorid, JSON.stringify(data));
@@ -141,10 +143,10 @@ async function main() {
 			// if (rst == false) console.log("err"); else console.log("commited");
 
 
-			console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
-			let result = await contract.evaluateTransaction('getHistoryDevice', sensorid);
-			console.log(JSON.parse(result))
-			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
+			// console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
+			// let result = await contract.evaluateTransaction('getHistoryDevice', deviceID);
+			// console.log(JSON.parse(result))
+			// console.log(`*** Result: ${prettyJSONString(result.toString())}`);
 
 
 		} finally {
