@@ -19,7 +19,6 @@ exports.buildCAClient = (FabricCAServices, ccp, caHostName) => {
 	const caInfo = ccp.certificateAuthorities[caHostName]; //lookup CA details from config
 	const caTLSCACerts = caInfo.tlsCACerts.pem;
 	const caClient = new FabricCAServices(caInfo.url, { trustedRoots: caTLSCACerts, verify: false }, caInfo.caName);
-
 	console.log(`Built a CA Client named ${caInfo.caName}`);
 	return caClient;
 };
@@ -43,6 +42,8 @@ exports.enrollAdmin = async (caClient, wallet, orgMspId) => {
 			mspId: orgMspId,
 			type: 'X.509',
 		};
+		// const idenservice = caClient.newIdentityService()
+		// console.log(idenservice)
 		await wallet.put(adminUserId, x509Identity);
 		console.log('Successfully enrolled admin user and imported it into the wallet');
 	} catch (error) {
@@ -67,6 +68,7 @@ exports.registerAndEnrollUser = async (caClient, wallet, orgMspId, userId, affil
 			console.log('Enroll the admin user before retrying');
 			return;
 		}
+		// console.log(adminIdentity)
 
 		// build a user object for authenticating with the CA
 		const provider = wallet.getProviderRegistry().getProvider(adminIdentity.type);
@@ -78,7 +80,25 @@ exports.registerAndEnrollUser = async (caClient, wallet, orgMspId, userId, affil
 			affiliation: affiliation,
 			enrollmentID: userId,
 			role: 'client',
-			attrs: [{ name: "deviceID", value: deivceID, ecert: true }]
+			// attrs: [{ name: "deviceID", value: deivceID, ecert: true }]
+							attrs: [{ name: "deviceID", value: deivceID, ecert: true },{
+					name : 'field',value: JSON.stringify([{
+						field_display: "Nhiệt độ",
+						filed_name : 'temperature',
+						field_unit : "oC"
+					},
+					{
+						field_display: "pH",
+						filed_name : 'ph',
+						field_unit : "pH"
+					},
+					{
+						field_display: "Độ ẩm",
+						filed_name : 'humidity',
+						field_unit : "%"
+					}])
+					,ecert : true
+				}] ,
 		}, adminUser);
 
 		const enrollment = await caClient.enroll({
@@ -100,6 +120,68 @@ exports.registerAndEnrollUser = async (caClient, wallet, orgMspId, userId, affil
 	}
 };
 
+exports.updateattrsUserForshareField = async (caClient , wallet , orgMspId,userId,attrName ,attrValue) =>
+{
+	try {
+		const userIdentity = await wallet.get(userId);
+		if (!userIdentity) {
+			console.log(`${userId} does not exists in the wallet`);
+			// console.log(userIdentity);
+			return;
+		}
+
+		const adminIdentity = await wallet.get(adminUserId);
+		if (!adminIdentity) {
+			console.log('An identity for the admin user does not exist in the wallet');
+			console.log('Enroll the admin user before retrying');
+			return;
+		}
+
+
+		const provider = wallet.getProviderRegistry().getProvider(adminIdentity.type);
+		const adminProvider = await provider.getUserContext(adminIdentity, adminUserId);
+		const identityService = caClient.newIdentityService()	
+		const user =  await identityService.getOne(userId,adminProvider)
+		console.log(user.result.attrs)
+
+		const customattrs = {
+			attrs :[
+				{
+					name : attrName,
+					value : JSON.stringify(attrValue),
+					ecert : true
+				}
+			]
+		}
+
+		const response = await identityService.update(userId,customattrs,adminProvider)
+		console.log("userIdenity attributes: ",response.result.attrs)
+		const Userprovider = wallet.getProviderRegistry().getProvider(userIdentity.type);
+		const UserProvider = await Userprovider.getUserContext(userIdentity, userId);
+		const enrollment = await caClient.reenroll(UserProvider)
+		console.log(enrollment)
+		const x509Identity = {
+			credentials: {
+				certificate: enrollment.certificate,
+				privateKey: enrollment.key.toBytes(),
+			},
+			mspId: orgMspId,
+			type: 'X.509',
+		};
+		await wallet.put(userId, x509Identity);
+	} catch (error) {
+		console.error(`Failed to update attrs ${error}`)
+	}
+}
+
+exports.reEnrollUSer = async (caClient , wallet , orgMspId,userId,)=>{
+	const userIdentity = await wallet.get(userId);
+	if (!userIdentity) {
+		console.log(`${userId} does not exists in the wallet`);
+		// console.log(userIdentity);
+		return;
+	}
+}
 
 exports.registerUser = async (caClient, wallet, orgMspId, userId, affiliation) => {
 	try {

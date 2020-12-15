@@ -79,6 +79,9 @@ class AssetTransfer extends Contract {
         const cid = new ClientIdentity(ctx.stub);
         // let channelname = cid.getAttributeValue("channelName");
         let mpsid = cid.getMSPID();
+        const attrfield = JSON.parse(cid.getAttributeValue('field'))
+        const device = cid.getAttributeValue('deviceID')
+        console.log(attrfield)
         if (cid.assertAttributeValue("deviceID", key) && mpsid === 'Org2MSP') {
 
             const exists = await this.deviceExists(ctx, key);
@@ -92,12 +95,23 @@ class AssetTransfer extends Contract {
             for await (const keyMod of promiseOfIterator) {
                 const resp = {
                     timestamp: keyMod.timestamp,
-                    txid: keyMod.tx_id
+                    txid: keyMod.tx_id,
+                    // attrs : attrfield
                 }
                 if (keyMod.is_delete) {
                     resp.data = 'KEY DELETED';
                 } else {
-                    resp.data = keyMod.value.toString('utf8');
+                    const numfield = attrfield.length
+                        const obj = JSON.parse(keyMod.value.toString('utf8'))
+                        let temp = {}
+                        temp['ID'] = obj['ID']
+                        temp['timestamp'] = obj['timestamp']
+                        for(let i of attrfield)
+                        {
+                            temp[i.field_name] = obj[i.field_name]
+                        }
+                    // resp.data = keyMod.value.toString('utf8');
+                    resp.data = temp
                 }
                 results.push(resp);
             }

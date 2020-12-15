@@ -9,7 +9,7 @@
 const { Gateway, Wallets } = require('fabric-network');
 const FabricCAServices = require('fabric-ca-client');
 const path = require('path');
-const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../test-application/javascript/CAUtil.js');
+const { buildCAClient, registerAndEnrollUser, enrollAdmin,updateattrsUserForshareField } = require('../../test-application/javascript/CAUtil.js');
 const { buildCCPOrg2, buildWallet } = require('../../test-application/javascript/AppUtil.js');
 
 const channelName = 'channel1';
@@ -21,8 +21,8 @@ const mspOrg = 'Org2MSP';
 const walletPath = path.join(__dirname, 'wallet2');
 // const org1UserId = 'appUser';
 // const org1UserId = `user10`;
-const orgUserId = `user2`;
-const deviceID = "deviceid2"
+const orgUserId = `user6`;
+const deviceID = "deviceid3"
 
 
 function prettyJSONString(inputString) {
@@ -42,11 +42,11 @@ async function main() {
 		const wallet = await buildWallet(Wallets, walletPath);
 
 		// in a real application this would be done on an administrative flow, and only once
-		await enrollAdmin(caClient, wallet, mspOrg);
+		// await enrollAdmin(caClient, wallet, mspOrg);
 
 		// in a real application this would be done only when a new user was required to be added
 		// and would be part of an administrative flow
-		await registerAndEnrollUser(caClient, wallet, mspOrg, orgUserId, 'org2.department1', deviceID);
+		// await registerAndEnrollUser(caClient, wallet, mspOrg, orgUserId, 'org2.department1', deviceID);
 
 		// Create a new gateway instance for interacting with the fabric network.
 		// In a real application this would be done as the backend server session is setup for
@@ -54,6 +54,18 @@ async function main() {
 		const gateway = new Gateway();
 
 		try {
+			const attr = [
+						// {
+						// 	field_display: "Nhiệt độ",
+						// 	field_name : 'temperature',
+						// 	field_unit : "oC"
+						// },
+						{
+							field_display: "pH",
+							field_name : 'ph',
+							field_unit : "pH"
+						}]
+			 await updateattrsUserForshareField(caClient , wallet , mspOrg,orgUserId,'field' ,attr)
 			// setup the gateway instance
 			// The user will now be able to create connections to the fabric network and be able to
 			// submit transactions and query. All transactions submitted by this gateway will be
@@ -61,24 +73,78 @@ async function main() {
 			await gateway.connect(ccp, {
 				wallet,
 				identity: orgUserId,
+				// identity: 'admin',//
+
 				discovery: { enabled: true, asLocalhost: true } // using asLocalhost as this gateway is using a fabric network deployed locally
 			});
+
+			// console.log(gateway.getIdentity())
+
+			// const admin = gateway.getIdentity();
+			// const provider = wallet.getProviderRegistry().getProvider(admin.type);
+			// const adminUser = await provider.getUserContext(admin, orgUserId);
+			// // const adminUser = await provider.getUserContext(admin, 'admin');
+
+			// const enrollment = await caClient.reenroll(adminUser)
+			// console.log(enrollment)
+			// const x509Identity = {
+			// 	credentials: {
+			// 		certificate: enrollment.certificate,
+			// 		privateKey: enrollment.key.toBytes(),
+			// 	},
+			// 	mspId: mspOrg,
+			// 	type: 'X.509',
+			// };
+			// await wallet.put(orgUserId, x509Identity);
+			// console.log(`Successfully registered and enrolled user ${userId} and imported it into the wallet`);
+			// const identityService = caClient.newIdentityService()
+			// console.log(identityService)
+			// const user =  await identityService.getOne(orgUserId,adminUser)
+			// console.log(user.result.attrs)
+			// console.log(ca)
+
+			// const customattrs = {
+			// 	// type:"client",
+			// 	// affiliation:"org1.department1" ,	
+			// 	attrs: [
+			// 		// { name: "deviceID", value: deviceID, ecert: true }
+					
+			// 		,{
+			// 		name : 'field',value: JSON.stringify([
+			// 		// {
+			// 		// 	field_display: "Nhiệt độ",
+			// 		// 	field_name : 'temperature',
+			// 		// 	field_unit : "oC"
+			// 		// },
+			// 		{
+			// 			field_display: "pH",
+			// 			field_name : 'ph',
+			// 			field_unit : "pH"
+			// 		}])
+			// 		,ecert : true
+			// 	}] ,
+				
+			// 	// caname : caClient.getCaName()
+			// }
+
+			// const response = await identityService.update(orgUserId,customattrs,adminUser)
+			// console.log("userIdenity attributes: ",response.result.attrs)
 
 			// Build a network instance based on the channel where the smart contract is deployed
 			const network = await gateway.getNetwork(channelName);
 
-			// Get the contract from the network.
+			// // // Get the contract from the network.
 			const contract = network.getContract(chaincodeName);
-			let data = {
-				ph: 11,
-				temperature: 20,
-				timestamp: Math.ceil(new Date().getTime() / 1000)
-			}
-			// console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
-			// let rst = await contract.submitTransaction('pushStateDevice', deviceID, JSON.stringify(data));
+			// let data = {
+			// 	ph: 11,
+			// 	temperature: 20,
+			// 	timestamp: Math.ceil(new Date().getTime() / 1000)
+			// }
+			// // console.log('\n--> Submit Transaction: CreateAsset, creates new asset with ID, color, owner, size, and appraisedValue arguments');
+			// // let rst = await contract.submitTransaction('pushStateDevice', deviceID, JSON.stringify(data));
 
-			// console.log(`*** Result: ${prettyJSONString(rst.toString())}`);
-			// if (rst == false) console.log("err"); else console.log("commited");
+			// // console.log(`*** Result: ${prettyJSONString(rst.toString())}`);
+			// // if (rst == false) console.log("err"); else console.log("commited");
 
 			console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
 			let result = await contract.evaluateTransaction('getHistoryDevice', deviceID);

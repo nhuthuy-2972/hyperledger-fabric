@@ -7,10 +7,13 @@
 'use strict';
 
 const { Gateway, Wallets } = require('fabric-network');
-const FabricCAServices = require('fabric-ca-client');
+const FabricCAServices  = require('fabric-ca-client');
+const FabricCAClient = require('fabric-ca-client')
+// console.log(Fac)
 const path = require('path');
 const { buildCAClient, registerAndEnrollUser, enrollAdmin } = require('../../test-application/javascript/CAUtil.js');
 const { buildCCPOrg1, buildCCPOrg2, buildWallet } = require('../../test-application/javascript/AppUtil.js');
+
 
 const channelName = 'channel1';
 // const channelName = 'channel';
@@ -22,8 +25,8 @@ const walletPath = path.join(__dirname, 'wallet1');
 // const org1UserId = 'appUser';
 // const org1UserId = `user10`;
 // const orgUserId = `${channelName}user${role}${mspOrg}`;
-const orgUserId = 'user2';
-const deviceID = "deviceid2"
+const orgUserId = 'user3';
+const deviceID = "deviceid3"
 function prettyJSONString(inputString) {
 	return JSON.stringify(JSON.parse(inputString), null, 2);
 }
@@ -89,15 +92,20 @@ async function main() {
 
 		// in a real application this would be done on an administrative flow, and only once
 		await enrollAdmin(caClient, wallet, mspOrg);
-
+		// const identityService = caClient.newIdentityService()
+		// console.log(identityService)
 		// in a real application this would be done only when a new user was required to be added
 		// and would be part of an administrative flow
-		await registerAndEnrollUser(caClient, wallet, mspOrg, orgUserId, 'org1.department1', deviceID);
+		 await registerAndEnrollUser(caClient, wallet, mspOrg, orgUserId, 'org1.department1', deviceID);
 
 		// Create a new gateway instance for interacting with the fabric network.
 		// In a real application this would be done as the backend server session is setup for
 		// a user that has been verified.
 		const gateway = new Gateway();
+
+		// const identityService = caClient.newIdentityService()
+		// console.log(identityService)
+
 
 		try {
 			// setup the gateway instance
@@ -106,27 +114,64 @@ async function main() {
 			// signed by this user using the credentials stored in the wallet.
 			await gateway.connect(ccp, {
 				wallet,
+				// identity: 'admin',
 				identity: orgUserId,
 				discovery: { enabled: true, asLocalhost: true } // using asLocalhost as this gateway is using a fabric network deployed locally
 			});
 
 
-			// const ca = gateway.getClient().getCertificateAuthority();
-			// const adminIdentity = gateway.getIdentity();
+			// const admin = gateway.getIdentity();
+			// const provider = wallet.getProviderRegistry().getProvider(admin.type);
+			// const adminUser = await provider.getUserContext(admin, 'admin');
+			// const identityService = caClient.newIdentityService()
+			// // // console.log(identityService)
+			// const user =  await identityService.getOne("user2",adminUser)
+			// console.log(user.result.attrs)
+			// // console.log(ca)
 
-			// const identityService = caClient.newIdentityService();
-			// const retrieveIdentity = await identityService.getOne(org1UserId, adminIdentity)
-			// console.log("user attributes: ", retrieveIdentity.result.attrs)
-			// // Build a network instance based on the channel where the smart contract is deployed
+			// const customattrs = {
+			// 	// type:"client",
+			// 	// affiliation:"org1.department1" ,	
+			// 	attrs: [{ name: "deviceID", value: "deviceid4", ecert: true },{
+			// 		name : 'field',value: JSON.stringify([{
+			// 			field_display: "Nhiệt độ",
+			// 			filed_name : 'temperature',
+			// 			field_unit : "oC"
+			// 		},
+			// 		{
+			// 			field_display: "pH",
+			// 			filed_name : 'ph',
+			// 			field_unit : "pH"
+			// 		},
+			// 		{
+			// 			field_display: "Độ ẩm",
+			// 			filed_name : 'humidity',
+			// 			field_unit : "%"
+			// 		}])
+			// 		,ecert : true
+			// 	}] ,
+				
+			// 	// caname : caClient.getCaName()
+			// }
+
+			// const response = await identityService.update("user2",customattrs,adminUser)
+			// console.log("userIdenity attributes: ",response.result.attrs)
+			// // const ca = gateway.getClient().getCertificateAuthority();
+			// // const adminIdentity = gateway.getIdentity();
+
+			// // const identityService = caClient.newIdentityService();
+			// // const retrieveIdentity = await identityService.getOne(org1UserId, adminIdentity)
+			// // console.log("user attributes: ", retrieveIdentity.result.attrs)
+			// // // Build a network instance based on the channel where the smart contract is deployed
 			const network = await gateway.getNetwork(channelName);
 
-			// Get the contract from the network.
+			// // Get the contract from the network.
 			const contract = network.getContract(chaincodeName);
 
 
 			let data = {
-				ph: 14,
-				temperature: 29,
+				ph: 17,
+				temperature: 27,
 				timestamp: Math.ceil(new Date().getTime() / 1000)
 			}
 
@@ -152,7 +197,7 @@ async function main() {
 		} finally {
 			// Disconnect from the gateway when the application is closing
 			// This will close all connections to the network
-			gateway.disconnect();
+			// gateway.disconnect();
 		}
 	} catch (error) {
 		console.error(`******** FAILED to run the application: ${error}`);
