@@ -51,7 +51,7 @@ exports.enrollAdmin = async (caClient, wallet, orgMspId) => {
 	}
 };
 
-exports.registerAndEnrollUser = async (caClient, wallet, orgMspId, userId, affiliation, deivceID) => {
+exports.registerAndEnrollUser = async (caClient, wallet, orgMspId, userId, affiliation, deivceID,attrs) => {
 	try {
 		// Check to see if we've already enrolled the user
 		const userIdentity = await wallet.get(userId);
@@ -81,22 +81,9 @@ exports.registerAndEnrollUser = async (caClient, wallet, orgMspId, userId, affil
 			enrollmentID: userId,
 			role: 'client',
 			// attrs: [{ name: "deviceID", value: deivceID, ecert: true }]
-							attrs: [{ name: "deviceID", value: deivceID, ecert: true },{
-					name : 'field',value: JSON.stringify([{
-						field_display: "Nhiệt độ",
-						filed_name : 'temperature',
-						field_unit : "oC"
-					},
-					{
-						field_display: "pH",
-						filed_name : 'ph',
-						field_unit : "pH"
-					},
-					{
-						field_display: "Độ ẩm",
-						filed_name : 'humidity',
-						field_unit : "%"
-					}])
+					attrs: [{ name: "deviceID", value: deivceID, ecert: true },{
+					name : 'field',
+					value: JSON.stringify(attrs)
 					,ecert : true
 				}] ,
 		}, adminUser);
@@ -144,31 +131,31 @@ exports.updateattrsUserForshareField = async (caClient , wallet , orgMspId,userI
 		const user =  await identityService.getOne(userId,adminProvider)
 		console.log(user.result.attrs)
 
-		const customattrs = {
-			attrs :[
-				{
-					name : attrName,
-					value : JSON.stringify(attrValue),
-					ecert : true
-				}
-			]
-		}
+		// const customattrs = {
+		// 	attrs :[
+		// 		{
+		// 			name : attrName,
+		// 			value : JSON.stringify(attrValue),
+		// 			ecert : true
+		// 		}
+		// 	]
+		// }
 
-		const response = await identityService.update(userId,customattrs,adminProvider)
-		console.log("userIdenity attributes: ",response.result.attrs)
-		const Userprovider = wallet.getProviderRegistry().getProvider(userIdentity.type);
-		const UserProvider = await Userprovider.getUserContext(userIdentity, userId);
-		const enrollment = await caClient.reenroll(UserProvider)
-		console.log(enrollment)
-		const x509Identity = {
-			credentials: {
-				certificate: enrollment.certificate,
-				privateKey: enrollment.key.toBytes(),
-			},
-			mspId: orgMspId,
-			type: 'X.509',
-		};
-		await wallet.put(userId, x509Identity);
+		// const response = await identityService.update(userId,customattrs,adminProvider)
+		// console.log("userIdenity attributes: ",response.result.attrs)
+		// const Userprovider = wallet.getProviderRegistry().getProvider(userIdentity.type);
+		// const UserProvider = await Userprovider.getUserContext(userIdentity, userId);
+		// const enrollment = await caClient.reenroll(UserProvider)
+		// console.log(enrollment)
+		// const x509Identity = {
+		// 	credentials: {
+		// 		certificate: enrollment.certificate,
+		// 		privateKey: enrollment.key.toBytes(),
+		// 	},
+		// 	mspId: orgMspId,
+		// 	type: 'X.509',
+		// };
+		// await wallet.put(userId, x509Identity);
 	} catch (error) {
 		console.error(`Failed to update attrs ${error}`)
 	}

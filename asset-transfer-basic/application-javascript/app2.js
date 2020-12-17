@@ -21,7 +21,7 @@ const mspOrg = 'Org2MSP';
 const walletPath = path.join(__dirname, 'wallet2');
 // const org1UserId = 'appUser';
 // const org1UserId = `user10`;
-const orgUserId = `user6`;
+const orgUserId = `7c6f2e1e98e1c26c376ac7bff7ad9571f652e1a4`;
 const deviceID = "deviceid3"
 
 
@@ -43,10 +43,28 @@ async function main() {
 
 		// in a real application this would be done on an administrative flow, and only once
 		// await enrollAdmin(caClient, wallet, mspOrg);
-
+		const attr = [
+			{
+				field_display: "Nhiệt độ",
+				field_name : 'temperature',
+				field_unit : "oC",
+				share : true
+			},
+			{
+				field_display: "pH",
+				field_name : 'ph',
+				field_unit : "pH",
+				share : true
+			},
+			{
+				field_display: "Độ ẩm",
+				field_name : 'humidity',
+				field_unit : "%",
+				share : true
+			}]
 		// in a real application this would be done only when a new user was required to be added
 		// and would be part of an administrative flow
-		// await registerAndEnrollUser(caClient, wallet, mspOrg, orgUserId, 'org2.department1', deviceID);
+		// await registerAndEnrollUser(caClient, wallet, mspOrg, orgUserId, 'org2.department1', deviceID,attr);
 
 		// Create a new gateway instance for interacting with the fabric network.
 		// In a real application this would be done as the backend server session is setup for
@@ -54,18 +72,8 @@ async function main() {
 		const gateway = new Gateway();
 
 		try {
-			const attr = [
-						// {
-						// 	field_display: "Nhiệt độ",
-						// 	field_name : 'temperature',
-						// 	field_unit : "oC"
-						// },
-						{
-							field_display: "pH",
-							field_name : 'ph',
-							field_unit : "pH"
-						}]
-			 await updateattrsUserForshareField(caClient , wallet , mspOrg,orgUserId,'field' ,attr)
+			
+			 await updateattrsUserForshareField(caClient , wallet , mspOrg,orgUserId,'refField' ,attr)
 			// setup the gateway instance
 			// The user will now be able to create connections to the fabric network and be able to
 			// submit transactions and query. All transactions submitted by this gateway will be
@@ -146,10 +154,10 @@ async function main() {
 			// // console.log(`*** Result: ${prettyJSONString(rst.toString())}`);
 			// // if (rst == false) console.log("err"); else console.log("commited");
 
-			console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
-			let result = await contract.evaluateTransaction('getHistoryDevice', deviceID);
-			console.log(JSON.parse(result))
-			console.log(`*** Result: ${prettyJSONString(result.toString())}`);
+			// console.log('\n--> Evaluate Transaction: GetAllAssets, function returns all the current assets on the ledger');
+			// let result = await contract.evaluateTransaction('getHistoryDevice', deviceID);
+			// console.log(JSON.parse(result))
+			// console.log(`*** Result: ${prettyJSONString(result.toString())}`);
 
 		} finally {
 			// Disconnect from the gateway when the application is closing

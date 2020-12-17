@@ -170,8 +170,9 @@ async function main() {
 
 
 			let data = {
-				ph: 17,
-				temperature: 27,
+				ph: 7,
+				temperature: 12,
+				humidity : 55,
 				timestamp: Math.ceil(new Date().getTime() / 1000)
 			}
 
