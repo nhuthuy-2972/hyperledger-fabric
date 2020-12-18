@@ -115,6 +115,7 @@ class AssetTransfer extends Contract {
             let temp = {};
             temp["ID"] = obj["ID"];
             temp["timestamp"] = obj["timestamp"];
+            temp["battery"] = obj["battery"];
             for (let i of attrfield) {
               if (i.share == true) temp[i.field_name] = obj[i.field_name];
             }
