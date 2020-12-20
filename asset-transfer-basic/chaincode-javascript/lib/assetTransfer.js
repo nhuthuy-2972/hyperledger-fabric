@@ -129,7 +129,74 @@ class AssetTransfer extends Contract {
       }
     } else throw new Error("Access denine");
   }
+  async getStatiscalDevice(ctx, key, startdate, enddate) {
+    const cid = new ClientIdentity(ctx.stub);
+    let mpsid = cid.getMSPID();
 
+    if (cid.assertAttributeValue("deviceID", key) && mpsid === "Org2MSP") {
+      if (cid.assertAttributeValue("role", "owner")) {
+        //chu so huuu
+        const exists = await this.deviceExists(ctx, key);
+        if (!exists) {
+          throw new Error(`The asset ${key} does not exist`);
+        }
+        const promiseOfIterator = ctx.stub.getHistoryForKey(key);
+        const results = [];
+        for await (const keyMod of promiseOfIterator) {
+          const resp = {
+            timestamp: keyMod.timestamp,
+            txid: keyMod.tx_id,
+          };
+          if (keyMod.is_delete) {
+            resp.data = "KEY DELETED";
+          } else {
+            const obj = JSON.parse(keyMod.value.toString("utf8"));
+            if (obj.timestamp >= startdate && obj.timestamp <= enddate) {
+              resp.data = obj;
+              results.push(resp);
+            }
+          }
+        }
+        return JSON.stringify(results);
+      } else if (cid.assertAttributeValue("role", "refuser")) {
+        //nguoi duoc chia se
+        const attrfield = JSON.parse(cid.getAttributeValue("refField"));
+        const exists = await this.deviceExists(ctx, key);
+        if (!exists) {
+          throw new Error(`The asset ${key} does not exist`);
+        }
+        const promiseOfIterator = ctx.stub.getHistoryForKey(key);
+
+        const results = [];
+        for await (const keyMod of promiseOfIterator) {
+          const resp = {
+            timestamp: keyMod.timestamp,
+            txid: keyMod.tx_id,
+            // attrs : attrfield
+          };
+          if (keyMod.is_delete) {
+            resp.data = "KEY DELETED";
+          } else {
+            const obj = JSON.parse(keyMod.value.toString("utf8"));
+            if (obj.timestamp >= startdate && obj.timestamp <= enddate) {
+              let temp = {};
+              temp["ID"] = obj["ID"];
+              temp["timestamp"] = obj["timestamp"];
+              temp["battery"] = obj["battery"];
+              for (let i of attrfield) {
+                if (i.share == true) temp[i.field_name] = obj[i.field_name];
+              }
+              resp.data = temp;
+              results.push(resp);
+            }
+          }
+        }
+        return JSON.stringify(results);
+      } else {
+        throw new Error("Access denine");
+      }
+    } else throw new Error("Access denine");
+  }
   // async getHistoryDevice(ctx, key) {
   //     const cid = new ClientIdentity(ctx.stub);
   //     let mpsid = cid.getMSPID();
